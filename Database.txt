@@ -1,0 +1,80 @@
+CREATE DATABASE IF NOT EXISTS cricket_academy;
+USE cricket_academy;
+
+CREATE TABLE IF NOT EXISTS players (
+    player_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    date_of_birth DATE,
+    gender ENUM('Male', 'Female'),
+    address VARCHAR(255),
+    phone_number VARCHAR(15),
+    joining_date DATE,
+    skill_level ENUM('Beginner', 'Intermediate', 'Advanced'),
+    position ENUM('Batsman', 'Bowler', 'All-rounder')
+);
+
+CREATE TABLE IF NOT EXISTS coaches (
+    coach_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    date_of_birth DATE,
+    gender ENUM('Male', 'Female'),
+    address VARCHAR(255),
+    phone_number VARCHAR(15)
+);
+
+CREATE TABLE IF NOT EXISTS teams (
+    team_id INT AUTO_INCREMENT PRIMARY KEY,
+    team_name VARCHAR(100),
+    age_group ENUM('U-15', 'U-19', 'Senior'),
+    coach_id INT,
+    team_captain INT,
+    FOREIGN KEY (coach_id) REFERENCES coaches(coach_id),
+    FOREIGN KEY (team_captain) REFERENCES players(player_id)
+);
+
+CREATE TABLE IF NOT EXISTS training_sessions (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE,
+    time TIME,
+    location VARCHAR(100),
+    coach_id INT,
+    session_type ENUM('Individual', 'Group', 'Special Clinic'),
+    FOREIGN KEY (coach_id) REFERENCES coaches(coach_id)
+);
+
+CREATE TABLE IF NOT EXISTS attendance_records (
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
+    player_id INT,
+    session_id INT,
+    attendance_status ENUM('Present', 'Absent', 'Late'),
+    FOREIGN KEY (player_id) REFERENCES players(player_id),
+    FOREIGN KEY (session_id) REFERENCES training_sessions(session_id)
+);
+
+CREATE TABLE IF NOT EXISTS facilities (
+    facility_id INT AUTO_INCREMENT PRIMARY KEY,
+    facility_name VARCHAR(100),
+    type ENUM('Ground', 'Indoor Net', 'Gym')
+);
+
+CREATE TABLE IF NOT EXISTS fees_payments (
+    payment_id INT AUTO_INCREMENT PRIMARY KEY,
+    player_id INT,
+    amount DECIMAL(10, 2),
+    payment_date DATE,
+    payment_type ENUM('Cash', 'Card', 'Online'),
+    fee_type ENUM('Registration', 'Monthly Fee', 'Training Camp Fee'),
+    status ENUM('Paid', 'Pending'),
+    FOREIGN KEY (player_id) REFERENCES players(player_id)
+);
+CREATE TRIGGER check_player_age 
+BEFORE INSERT ON players
+FOR EACH ROW
+BEGIN
+    IF NEW.date_of_birth > CURDATE() THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Date of birth cannot be in the future';
+    END IF;
+END;
